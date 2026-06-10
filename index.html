@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設計部週報</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --border: #e8eaed;
+    --text-primary: #1a1d23;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --danger: #dc2626;
+    --danger-light: #fef2f2;
+    --warning: #d97706;
+    --warning-light: #fffbeb;
+    --success: #16a34a;
+    --success-light: #f0fdf4;
+    --neutral-light: #f3f4f6;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 14px;
+  }
+  .header-title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+  .header-period { font-size: 12px; color: var(--text-secondary); margin-left: 4px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; transition: all 0.15s; font-family: inherit;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: var(--neutral-light); color: var(--text-primary); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger { background: var(--danger-light); color: var(--danger); }
+  .btn-danger:hover { background: #fee2e2; }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-ghost:hover { background: var(--neutral-light); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Main layout ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+  /* ── Period selector ── */
+  .period-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+  }
+  .period-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap; }
+  .period-input {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 6px 10px; font-size: 13px; font-family: inherit;
+    color: var(--text-primary); background: var(--bg);
+  }
+  .period-sep { color: var(--text-muted); font-size: 13px; }
+
+  /* ── Person tabs ── */
+  .person-tabs {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .person-tab {
+    padding: 8px 16px; border-radius: 20px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .person-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .person-tab.active {
+    background: var(--accent); border-color: var(--accent);
+    color: white;
+  }
+  .person-tab .count {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: 11px; margin-left: 4px;
+    background: rgba(255,255,255,0.25);
+  }
+  .person-tab:not(.active) .count {
+    background: var(--neutral-light); color: var(--text-secondary);
+  }
+
+  /* ── Task section ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-person-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+
+  /* ── Task cards ── */
+  .tasks-grid { display: flex; flex-direction: column; gap: 8px; }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s;
+  }
+  .task-card:hover { box-shadow: var(--shadow); }
+  .task-card.status-延順 { border-left: 3px solid var(--danger); }
+  .task-card.status-進行中 { border-left: 3px solid var(--accent); }
+  .task-card.status-尚未開始 { border-left: 3px solid var(--border); }
+
+  .task-status-dot {
+    width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0;
+  }
+  .status-進行中 .task-status-dot { background: var(--accent); }
+  .status-尚未開始 .task-status-dot { background: var(--text-muted); }
+  .status-順延 .task-status-dot { background: var(--danger); }
+
+  .task-content { flex: 1; min-width: 0; }
+  .task-name { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+  .task-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
+  }
+  .tag-project { background: var(--accent-light); color: var(--accent); }
+  .tag-type { background: var(--neutral-light); color: var(--text-secondary); }
+  .tag-date { background: transparent; color: var(--text-muted); font-size: 11px; }
+  .tag-delay { background: var(--danger-light); color: var(--danger); }
+
+  .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  /* ── Status badge ── */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .badge-進行中 { background: var(--accent-light); color: var(--accent); }
+  .badge-尚未開始 { background: var(--neutral-light); color: var(--text-secondary); }
+  .badge-順延 { background: var(--danger-light); color: var(--danger); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    color: var(--text-muted); font-size: 14px;
+  }
+  .empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200; display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 100%; max-width: 520px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-size: 15px; font-weight: 600; }
+  .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .form-input, .form-select, .form-textarea {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 9px 12px; font-size: 14px; font-family: inherit;
+    color: var(--text-primary); background: var(--surface);
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+  .form-textarea { resize: vertical; min-height: 70px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── Login ── */
+  .login-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 300; display: none;
+    align-items: center; justify-content: center;
+  }
+  .login-screen.open { display: flex; }
+  .login-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 40px;
+    width: 320px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .login-icon {
+    width: 56px; height: 56px;
+    background: var(--accent);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 24px; color: white;
+  }
+  .login-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+
+  /* ── Loading ── */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px; color: var(--text-muted); gap: 8px;
+  }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--text-primary); color: white;
+    padding: 10px 20px; border-radius: 8px; font-size: 13px;
+    z-index: 500; opacity: 0; transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .stat-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── Admin panel ── */
+  .admin-indicator {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 6px;
+    background: var(--accent-light); color: var(--accent);
+    font-size: 12px; font-weight: 500;
+  }
+
+  /* ── Person stats panel ── */
+  .person-stats-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .person-stats-title {
+    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .person-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .person-stat-card {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    border: 1px solid var(--border);
+  }
+  .person-stat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .person-stat-name {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 14px;
+  }
+  .person-stat-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .person-stat-pct {
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+  }
+  .progress-bar-wrap {
+    height: 6px; background: var(--border); border-radius: 99px;
+    overflow: hidden; margin-bottom: 10px;
+  }
+  .progress-bar-fill {
+    height: 100%; border-radius: 99px;
+    transition: width 0.5s ease;
+    background: var(--accent);
+  }
+  .person-stat-breakdown {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .breakdown-chip {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--text-secondary);
+  }
+  .breakdown-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .delay-warning {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--danger); font-weight: 500;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 640px) {
+    .header { padding: 0 16px; }
+    .main { padding: 16px 12px; }
+    .form-row { grid-template-columns: 1fr; }
+    .period-bar { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">設</div>
+    <div>
+      <span class="header-title">設計部週報</span>
+      <span class="header-period" id="headerPeriod"></span>
+    </div>
+  </div>
+  <div class="header-right" id="headerRight">
+    <button class="btn btn-ghost btn-sm" onclick="showLoginModal()">🔐 管理員登入</button>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Period bar (admin only) -->
+  <div class="period-bar" id="periodBar" style="display:none">
+    <span class="period-label">週期</span>
+    <input type="date" class="period-input" id="periodStart">
+    <span class="period-sep">→</span>
+    <input type="date" class="period-input" id="periodEnd">
+    <button class="btn btn-primary btn-sm" onclick="savePeriod()">儲存週期</button>
+    <button class="btn btn-secondary btn-sm" onclick="addTaskModal()">＋ 新增任務</button>
+  </div>
+
+  <!-- Admin stats panel (admin only) -->
+  <div class="person-stats-panel" id="personStatsPanel" style="display:none">
+    <div class="person-stats-title">📊 本週完成率</div>
+    <div class="person-stats-grid" id="personStatsGrid"></div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Person tabs -->
+  <div class="person-tabs" id="personTabs"></div>
+
+  <!-- Tasks -->
+  <div id="tasksContainer">
+    <div class="loading"><div class="spinner"></div><span>載入中…</span></div>
+  </div>
+
+</main>
+
+<!-- Login modal -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">管理員登入</div>
+    <div class="login-sub">輸入密碼以進行編輯</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input type="password" class="form-input" id="loginPassword" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn btn-primary" onclick="doLogin()">登入</button>
+      <button class="btn btn-ghost" onclick="closeLogin()">取消</button>
+    </div>
+    <div id="loginError" style="color:var(--danger);font-size:12px;margin-top:8px;display:none">密碼錯誤，請重試</div>
+  </div>
+</div>
+
+<!-- Task modal -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">新增任務</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeTaskModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">工作項目 *</label>
+        <input type="text" class="form-input" id="fName" placeholder="例：寶山P3 CUP棟南向笠木下料">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">負責人 *</label>
+          <select class="form-select" id="fPerson">
+            <option value="">選擇人員</option>
+            <option>許慧如</option>
+            <option>李采蓉</option>
+            <option>洪源良</option>
+            <option>蘇郁婷</option>
+            <option>黃苓舫</option>
+            <option>劉康華</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">進度狀態 *</label>
+          <select class="form-select" id="fStatus">
+            <option value="尚未開始">尚未開始</option>
+            <option value="進行中">進行中</option>
+            <option value="順延">順延</option>
+            <option value="完成">完成</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">專案名稱</label>
+          <input type="text" class="form-input" id="fProject" placeholder="例：寶山P3 CUP">
+        </div>
+        <div class="form-group">
+          <label class="form-label">項目類型</label>
+          <input type="text" class="form-input" id="fType" placeholder="例：鋁板、施工圖">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">開始日期</label>
+          <input type="date" class="form-input" id="fDateStart">
+        </div>
+        <div class="form-group">
+          <label class="form-label">結束日期</label>
+          <input type="date" class="form-input" id="fDateEnd">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">備註</label>
+        <textarea class="form-textarea" id="fNote" placeholder="選填"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTaskModal()">取消</button>
+      <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteTask()" style="display:none">刪除</button>
+      <button class="btn btn-primary" onclick="saveTask()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ──
+const SHEET_ID = '13Q_yRFHI-3daRvqtuu4mCJPLFr5I3T5PEJpwKFuYHc4';
+const API_KEY  = 'AIzaSyBpb_7nQorLtVCYPuSByXcrcN38ZgNytxA';
+const SHEET_TASKS  = 'Tasks';
+const SHEET_CONFIG = 'Config';
+const ADMIN_PASS   = 'design2026';  // ← 可自行修改
+
+const PERSONS = ['許慧如','李采蓉','洪源良','蘇郁婷','黃苓舫','劉康華'];
+const STATUS_ORDER = { '順延': 0, '進行中': 1, '尚未開始': 2, '完成': 3 };
+
+// ── State ──
+let isAdmin = false;
+let allTasks = [];
+let currentPerson = 'all';
+let editingRow = null;
+let periodStart = '', periodEnd = '';
+
+// ── Init ──
+window.onload = async () => {
+  await loadData();
+};
+
+// ── Google Sheets API (read) ──
+async function sheetsGet(range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(await r.text());
+  return (await r.json()).values || [];
+}
+
+// ── Apps Script API (write) ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzLc3rYRppVmQ-mL2RPzHONT7p7LOhAt5XnVDtLiSRaZbuUC-C5ueNpFZZn421L-IsKZA/exec';
+
+async function gasPost(body) {
+  const r = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, secret: ADMIN_PASS }),
+  });
+  const json = await r.json();
+  if (!json.ok) throw new Error(json.error || '寫入失敗');
+  return json;
+}
+
+async function sheetsAppend(range, values) {
+  // range is like "Tasks!A:H", extract sheet name
+  const sheet = range.split('!')[0];
+  return await gasPost({ action: 'append', sheet, values: values[0] });
+}
+
+async function sheetsUpdate(range, values) {
+  // range is like "Tasks!A5:H5", extract row number
+  const match = range.match(/!A(\d+)/);
+  const row   = match ? parseInt(match[1]) : 1;
+  const sheet = range.split('!')[0];
+  return await gasPost({ action: 'update', sheet, row, values: values[0] });
+}
+
+async function sheetsClear(range) {
+  // Used for Config sheet clear — just update with empty via update loop
+  // For config we re-write directly, so just resolve
+  return Promise.resolve();
+}
+
+// ── Load data ──
+async function loadData() {
+  try {
+    // Load config (period)
+    try {
+      const cfg = await sheetsGet(`${SHEET_CONFIG}!A1:B10`);
+      cfg.forEach(row => {
+        if (row[0] === 'periodStart') periodStart = row[1] || '';
+        if (row[0] === 'periodEnd')   periodEnd   = row[1] || '';
+      });
+    } catch(e) {}
+
+    // Load tasks
+    const rows = await sheetsGet(`${SHEET_TASKS}!A2:I1000`);
+    allTasks = rows
+      .filter(r => r[0]) // skip empty
+      .map((r, i) => ({
+        row: i + 2, // 1-indexed, header=row1
+        name:    r[0] || '',
+        person:  r[1] || '',
+        status:  r[2] || '',
+        project: r[3] || '',
+        type:    r[4] || '',
+        dateStart: r[5] || '',
+        dateEnd:   r[6] || '',
+        note:    r[7] || '',
+      }));
+
+    updateHeaderPeriod();
+    renderStats();
+    renderPersonTabs();
+    renderTasks();
+    if (isAdmin) renderPersonStats();
+  } catch(e) {
+    document.getElementById('tasksContainer').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>無法載入資料，請確認 Google Sheet 設定正確。<br><small style="color:var(--text-muted)">${e.message}</small></div>`;
+  }
+}
+
+function updateHeaderPeriod() {
+  const el = document.getElementById('headerPeriod');
+  if (periodStart && periodEnd) {
+    el.textContent = `${formatDateDisplay(periodStart)} ～ ${formatDateDisplay(periodEnd)}`;
+  }
+  if (isAdmin) {
+    document.getElementById('periodStart').value = periodStart;
+    document.getElementById('periodEnd').value   = periodEnd;
+  }
+}
+
+function formatDateDisplay(d) {
+  if (!d) return '';
+  // Accepts YYYY-MM-DD
+  const parts = d.split('-');
+  if (parts.length === 3) {
+    const y = parseInt(parts[0]) - 1911;
+    return `${y}.${parts[1]}.${parts[2]}`;
+  }
+  return d;
+}
+
+// ── Stats ──
+function renderStats() {
+  const counts = { '進行中': 0, '尚未開始': 0, '順延': 0, '完成': 0 };
+  allTasks.forEach(t => { if (counts[t.status] !== undefined) counts[t.status]++; });
+  const colors = { '進行中': 'var(--accent)', '尚未開始': 'var(--text-muted)', '順延': 'var(--danger)', '完成': 'var(--success)' };
+  document.getElementById('statsBar').innerHTML =
+    Object.entries(counts).map(([k,v]) =>
+      `<div class="stat-chip"><div class="stat-dot" style="background:${colors[k]}"></div>${k} ${v}</div>`
+    ).join('');
+}
+
+// ── Person tabs ──
+function renderPersonTabs() {
+  const counts = {};
+  PERSONS.forEach(p => counts[p] = 0);
+  allTasks.forEach(t => { if (counts[t.person] !== undefined) counts[t.person]++; });
+
+  const all = allTasks.length;
+  let html = `<div class="person-tab ${currentPerson==='all'?'active':''}" onclick="selectPerson('all')">全部<span class="count">${all}</span></div>`;
+  PERSONS.forEach(p => {
+    html += `<div class="person-tab ${currentPerson===p?'active':''}" onclick="selectPerson('${p}')">${p}<span class="count">${counts[p]}</span></div>`;
+  });
+  document.getElementById('personTabs').innerHTML = html;
+}
+
+function selectPerson(p) {
+  currentPerson = p;
+  renderPersonTabs();
+  renderTasks();
+}
+
+// ── Tasks ──
+function renderTasks() {
+  const filtered = currentPerson === 'all'
+    ? allTasks
+    : allTasks.filter(t => t.person === currentPerson);
+
+  if (filtered.length === 0) {
+    document.getElementById('tasksContainer').innerHTML =
+      `<div class="empty-state"><div class="icon">📋</div>目前沒有任務</div>`;
+    return;
+  }
+
+  // Sort by status priority then date
+  const sorted = [...filtered].sort((a,b) => {
+    const sa = STATUS_ORDER[a.status] ?? 9;
+    const sb = STATUS_ORDER[b.status] ?? 9;
+    if (sa !== sb) return sa - sb;
+    return (a.dateStart || '').localeCompare(b.dateStart || '');
+  });
+
+  if (currentPerson === 'all') {
+    // Group by person
+    let html = '';
+    PERSONS.forEach(p => {
+      const pt = sorted.filter(t => t.person === p);
+      if (pt.length === 0) return;
+      html += `<div style="margin-bottom:28px">
+        <div class="section-header">
+          <div class="section-title">
+            <div class="section-person-avatar">${p[0]}</div>${p}
+          </div>
+        </div>
+        <div class="tasks-grid">${pt.map(taskCardHtml).join('')}</div>
+      </div>`;
+    });
+    document.getElementById('tasksContainer').innerHTML = html;
+  } else {
+    document.getElementById('tasksContainer').innerHTML =
+      `<div class="tasks-grid">${sorted.map(taskCardHtml).join('')}</div>`;
+  }
+}
+
+function taskCardHtml(t) {
+  const statusClass = 'status-' + t.status;
+  const badgeClass  = 'badge-' + t.status;
+  const dateStr = t.dateStart
+    ? (t.dateEnd && t.dateEnd !== t.dateStart
+        ? `${formatDateDisplay(t.dateStart)} → ${formatDateDisplay(t.dateEnd)}`
+        : formatDateDisplay(t.dateStart))
+    : '';
+
+  const editBtn = isAdmin
+    ? `<button class="btn btn-ghost btn-sm" onclick='editTask(${JSON.stringify(t)})' title="編輯">✏️</button>`
+    : '';
+
+  return `<div class="task-card ${statusClass}">
+    <div class="task-status-dot"></div>
+    <div class="task-content">
+      <div class="task-name">${t.name}</div>
+      <div class="task-meta">
+        <span class="status-badge ${badgeClass}">${t.status}</span>
+        ${t.project ? `<span class="tag tag-project">${t.project}</span>` : ''}
+        ${t.type    ? `<span class="tag tag-type">${t.type}</span>`       : ''}
+        ${dateStr   ? `<span class="tag tag-date">📅 ${dateStr}</span>`    : ''}
+        ${t.note    ? `<span class="tag tag-type">💬 ${t.note}</span>`    : ''}
+      </div>
+    </div>
+    <div class="task-actions">${editBtn}</div>
+  </div>`;
+}
+
+// ── Admin ──
+function showLoginModal() {
+  document.getElementById('loginScreen').classList.add('open');
+  document.getElementById('loginPassword').focus();
+}
+function closeLogin() {
+  document.getElementById('loginScreen').classList.remove('open');
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginPassword').value = '';
+}
+function doLogin() {
+  const pw = document.getElementById('loginPassword').value;
+  if (pw === ADMIN_PASS) {
+    isAdmin = true;
+    closeLogin();
+    activateAdminMode();
+    showToast('已登入管理員模式');
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+function activateAdminMode() {
+  document.getElementById('periodBar').style.display = 'flex';
+  document.getElementById('periodStart').value = periodStart;
+  document.getElementById('periodEnd').value   = periodEnd;
+  document.getElementById('personStatsPanel').style.display = 'block';
+  document.getElementById('headerRight').innerHTML =
+    `<div class="admin-indicator">🔑 管理員</div>
+     <button class="btn btn-secondary btn-sm" onclick="logout()">登出</button>`;
+  renderPersonStats();
+  renderTasks();
+}
+function logout() {
+  isAdmin = false;
+  document.getElementById('periodBar').style.display = 'none';
+  document.getElementById('personStatsPanel').style.display = 'none';
+  document.getElementById('headerRight').innerHTML =
+    `<button class="btn btn-ghost btn-sm" onclick="showLoginModal()">🔐 管理員登入</button>`;
+  renderTasks();
+}
+
+// ── Person stats ──
+function renderPersonStats() {
+  const grid = document.getElementById('personStatsGrid');
+  const statusColors = {
+    '完成':     '#16a34a',
+    '進行中':   '#2563eb',
+    '尚未開始': '#9ca3af',
+    '順延':     '#dc2626',
+  };
+
+  grid.innerHTML = PERSONS.map(p => {
+    const tasks = allTasks.filter(t => t.person === p);
+    const total    = tasks.length;
+    const done     = tasks.filter(t => t.status === '完成').length;
+    const inprog   = tasks.filter(t => t.status === '進行中').length;
+    const notstart = tasks.filter(t => t.status === '尚未開始').length;
+    const delayed  = tasks.filter(t => t.status === '順延').length;
+    const pct      = total > 0 ? Math.round(done / total * 100) : 0;
+
+    // Progress bar color: red if any delayed, blue otherwise
+    const barColor = delayed > 0 ? '#dc2626' : (pct === 100 ? '#16a34a' : '#2563eb');
+
+    const delayWarn = delayed > 0
+      ? `<div class="delay-warning">⚠️ 順延 ${delayed} 項，需注意</div>` : '';
+
+    return `<div class="person-stat-card">
+      <div class="person-stat-header">
+        <div class="person-stat-name">
+          <div class="person-stat-avatar">${p[0]}</div>${p}
+        </div>
+        <div class="person-stat-pct">${pct}%</div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+      </div>
+      <div class="person-stat-breakdown">
+        <span class="breakdown-chip"><span class="breakdown-dot" style="background:#16a34a"></span>完成 ${done}</span>
+        <span class="breakdown-chip"><span class="breakdown-dot" style="background:#2563eb"></span>進行中 ${inprog}</span>
+        <span class="breakdown-chip"><span class="breakdown-dot" style="background:#9ca3af"></span>尚未開始 ${notstart}</span>
+        <span class="breakdown-chip"><span class="breakdown-dot" style="background:#dc2626"></span>順延 ${delayed}</span>
+        <span class="breakdown-chip" style="margin-left:auto;color:var(--text-muted)">共 ${total} 項</span>
+      </div>
+      ${delayWarn}
+    </div>`;
+  }).join('');
+}
+
+// ── Period save ──
+async function savePeriod() {
+  periodStart = document.getElementById('periodStart').value;
+  periodEnd   = document.getElementById('periodEnd').value;
+  try {
+    await gasPost({ action: 'update', sheet: SHEET_CONFIG, row: 1, values: ['periodStart', periodStart] });
+    await gasPost({ action: 'update', sheet: SHEET_CONFIG, row: 2, values: ['periodEnd',   periodEnd]   });
+    updateHeaderPeriod();
+    showToast('週期已儲存');
+  } catch(e) { showToast('儲存失敗：' + e.message); }
+}
+
+// ── Task modal ──
+function addTaskModal() {
+  editingRow = null;
+  document.getElementById('modalTitle').textContent = '新增任務';
+  document.getElementById('deleteBtn').style.display = 'none';
+  ['fName','fProject','fType','fDateStart','fDateEnd','fNote'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fPerson').value = '';
+  document.getElementById('fStatus').value = '尚未開始';
+  document.getElementById('taskModal').classList.add('open');
+}
+function editTask(t) {
+  editingRow = t.row;
+  document.getElementById('modalTitle').textContent = '編輯任務';
+  document.getElementById('deleteBtn').style.display = 'inline-flex';
+  document.getElementById('fName').value      = t.name;
+  document.getElementById('fPerson').value    = t.person;
+  document.getElementById('fStatus').value    = t.status;
+  document.getElementById('fProject').value   = t.project;
+  document.getElementById('fType').value      = t.type;
+  document.getElementById('fDateStart').value = t.dateStart;
+  document.getElementById('fDateEnd').value   = t.dateEnd;
+  document.getElementById('fNote').value      = t.note;
+  document.getElementById('taskModal').classList.add('open');
+}
+function closeTaskModal() {
+  document.getElementById('taskModal').classList.remove('open');
+}
+
+async function saveTask() {
+  const name   = document.getElementById('fName').value.trim();
+  const person = document.getElementById('fPerson').value;
+  const status = document.getElementById('fStatus').value;
+  if (!name || !person) { showToast('請填寫工作項目與負責人'); return; }
+
+  const row = [
+    name, person, status,
+    document.getElementById('fProject').value.trim(),
+    document.getElementById('fType').value.trim(),
+    document.getElementById('fDateStart').value,
+    document.getElementById('fDateEnd').value,
+    document.getElementById('fNote').value.trim(),
+  ];
+
+  try {
+    if (editingRow) {
+      await sheetsUpdate(`${SHEET_TASKS}!A${editingRow}:H${editingRow}`, [row]);
+      showToast('任務已更新');
+    } else {
+      await sheetsAppend(`${SHEET_TASKS}!A:H`, [row]);
+      showToast('任務已新增');
+    }
+    closeTaskModal();
+    await loadData();
+  } catch(e) { showToast('儲存失敗：' + e.message); }
+}
+
+async function deleteTask() {
+  if (!editingRow) return;
+  if (!confirm('確定要刪除這項任務？')) return;
+  try {
+    await gasPost({ action: 'clear', sheet: SHEET_TASKS, row: editingRow });
+    showToast('任務已刪除');
+    closeTaskModal();
+    await loadData();
+  } catch(e) { showToast('刪除失敗：' + e.message); }
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
