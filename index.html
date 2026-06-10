@@ -558,14 +558,17 @@ async function sheetsGet(range) {
 }
 
 // ── Apps Script API (write) ──
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzLc3rYRppVmQ-mL2RPzHONT7p7LOhAt5XnVDtLiSRaZbuUC-C5ueNpFZZn421L-IsKZA/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw_yMbLir8aF955UCu132eS4bEKFotPAoaf9wjDxX0E5jolGVmrie7VDGOwtuqqxgN7rQ/exec';
 
 async function gasPost(body) {
-  const r = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...body, secret: ADMIN_PASS }),
+  const params = new URLSearchParams({
+    action: body.action,
+    secret: ADMIN_PASS,
+    sheet:  body.sheet  || '',
+    row:    body.row    || '',
+    values: JSON.stringify(body.values || []),
   });
+  const r = await fetch(GAS_URL + '?' + params.toString());
   const json = await r.json();
   if (!json.ok) throw new Error(json.error || '寫入失敗');
   return json;
