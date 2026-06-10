@@ -558,20 +558,31 @@ async function sheetsGet(range) {
 }
 
 // ── Apps Script API (write) ──
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw_yMbLir8aF955UCu132eS4bEKFotPAoaf9wjDxX0E5jolGVmrie7VDGOwtuqqxgN7rQ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwQGodS1UMws309NnKaSAAryZNrd0vDQub8l-5RcV0jw99maBEgyp7hGbSIom9GLng7tg/exec';
 
-async function gasPost(body) {
-  const params = new URLSearchParams({
-    action: body.action,
-    secret: ADMIN_PASS,
-    sheet:  body.sheet  || '',
-    row:    body.row    || '',
-    values: JSON.stringify(body.values || []),
+function gasPost(body) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now();
+    const params = new URLSearchParams({
+      action:   body.action,
+      secret:   ADMIN_PASS,
+      sheet:    body.sheet  || '',
+      row:      body.row    || '',
+      values:   JSON.stringify(body.values || []),
+      callback: cbName,
+    });
+    window[cbName] = (json) => {
+      delete window[cbName];
+      document.getElementById('gasScript')?.remove();
+      if (!json.ok) reject(new Error(json.error || '寫入失敗'));
+      else resolve(json);
+    };
+    const s = document.createElement('script');
+    s.id  = 'gasScript';
+    s.src = GAS_URL + '?' + params.toString();
+    s.onerror = () => reject(new Error('Script load failed'));
+    document.body.appendChild(s);
   });
-  const r = await fetch(GAS_URL + '?' + params.toString());
-  const json = await r.json();
-  if (!json.ok) throw new Error(json.error || '寫入失敗');
-  return json;
 }
 
 async function sheetsAppend(range, values) {
